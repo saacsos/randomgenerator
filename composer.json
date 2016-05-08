@@ -9,7 +9,7 @@
         }
     ],
     "require": {},
-	"license": "MIT",
+    "license": "MIT",
     "autoload": {
         "psr-4": {
             "Saacsos\\Randomgenerator\\": "src/"
