@@ -1,6 +1,6 @@
 {
     "name": "saacsos/randomgenerator",
-    "description": "Random Generator",
+    "description": "Generate Random String by level and length",
     "authors": [
         {
             "name": "saacsos",
