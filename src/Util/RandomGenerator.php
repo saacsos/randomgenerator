@@ -5,6 +5,11 @@ namespace Saacsos\Randomgenerator\Util;
 class RandomGenerator
 {
     private $key = null;
+    private $string = null;
+    private $length = 8;
+    private $level = 13;
+    private $min = 1;
+    private $max = null;
     const TOKEN_LEVEL_NUMERIC       = 1;
     const TOKEN_LEVEL_HEXADECIMAL   = 2;
     const TOKEN_LEVEL_LOWERCASE     = 4;
@@ -26,18 +31,74 @@ class RandomGenerator
         16 => '!@#$%^&*()_=[]{}?,'  # do not change special characters
     );
 
-    /**
-     * RandomGenerator constructor.
-     * @param null $key
-     */
-    public function __construct($key = null)
+    public function get()
     {
-        $this->key = $key;
+        return $this->string;
+    }
+
+    public function getString()
+    {
+        return $this->string;
+    }
+
+    public function key($key)
+    {
+        $this->setKey($key);
+        return $this;
     }
 
     public function setKey($key)
     {
         $this->key = $key;
+        return $this;
+    }
+
+    public function length($length)
+    {
+        $this->setLength($length);
+        return $this;
+    }
+
+    public function setLength($length)
+    {
+        $this->length = $length;
+        return $this;
+    }
+
+    public function level($level)
+    {
+        $this->setLevel($level);
+        return $this;
+    }
+
+    public function setLevel($level)
+    {
+        $this->level = $level;
+        return $this;
+    }
+
+    public function min($min)
+    {
+        $this->setMin($min);
+        return $this;
+    }
+
+    public function setMin($min)
+    {
+        $this->min = $min;
+        return $this;
+    }
+
+    public function max($max)
+    {
+        $this->setMax($max);
+        return $this;
+    }
+
+    public function setMax($max)
+    {
+        $this->max = $max;
+        return $this;
     }
 
     /**
@@ -46,23 +107,25 @@ class RandomGenerator
      */
     public function accessToken()
     {
-        return $this->randomHexaDecimalString(48);
+        $this->string = $this->length(48)->randomHexaDecimalString()->get();
+        return $this;
     }
 
     /**
      * @param $length
      * @return string
      */
-    private function randomHexaDecimalString($length=16)
+    private function randomHexaDecimalString()
     {
         mt_srand((double)microtime() * 10000);
         $chars = strtolower(md5(uniqid(rand(), true) . $this->key));
-        if ($length >= 32) {
-            for ($i = 0; $i < floor($length / 32); $i++ ) {
+        if ($this->length >= 32) {
+            for ($i = 0; $i < floor($this->length / 32); $i++ ) {
                 $chars .= strtolower(md5(uniqid(rand(), true) . $this->key));
             }
         }
-        return substr($chars, 0, $length);
+        $this->string = substr($chars, 0, $this->length);
+        return $this;
     }
 
     /**
@@ -70,23 +133,24 @@ class RandomGenerator
      * @param int $length
      * @return string
      */
-    public function password($level=13, $length=8)
+    public function password()
     {
-        return $this->random($level, $length);
+        $this->string = $this->random()->get();
+        return $this;
     }
 
-    public function random($level, $length)
+    public function random()
     {
         $long_chars = '';
-        $password_length = $length;
+        $password_length = $this->length;
         $password = '';
-        if ($level < 1)
-            throw new \InvalidArgumentException("level ({$level}) must be integer greater than 0");
-        if ($length < 1)
-            throw new \InvalidArgumentException("length ({$length}) must be integer greater than 0");
+        if ($this->level < 1)
+            throw new \InvalidArgumentException("level ({$this->level}) must be integer greater than 0");
+        if ($this->length < 1)
+            throw new \InvalidArgumentException("length ({$this->length}) must be integer greater than 0");
 
         foreach ($this->token_level_chars as $level_key => $chars) {
-            if (($level_key & $level) == $level_key and $password_length > 0) {
+            if (($level_key & $this->level) == $level_key and $password_length > 0) {
                 $password .= $this->randomString($chars, 1);
                 $long_chars .= $chars;
                 $password_length--;
@@ -96,7 +160,8 @@ class RandomGenerator
         if ($password_length > 0) {
             $password .= $this->randomString($long_chars, $password_length);
         }
-        return str_shuffle($password);
+        $this->string = str_shuffle($password);
+        return $this;
     }
 
     /**
@@ -113,16 +178,13 @@ class RandomGenerator
         return implode('', $string);
     }
 
-    public function patternString($level, $min = 8, $max = null, $strict = false)
+    public function patternString($strict = false)
     {
-        if (!empty($min) || !empty($max)) {
-            $range = "{{$min},{$max}}";
+        if (!empty($this->min) || !empty($this->max)) {
+            $range = "{{$this->min},{$this->max}}";
         } else {
             $range = "+";
         }
-//        $pattern_string = array(
-//            13 => "/^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])([a-zA-Z0-9]+){$range}$/"
-//        );
 
         $string = "";
         foreach ($this->validate_token_level_chars as $level_key => $chars) {
@@ -130,7 +192,7 @@ class RandomGenerator
                 $chars = preg_quote($chars);
             }
 
-            if (($level_key & $level) == $level_key) {
+            if (($level_key & $this->level) == $level_key) {
                 $string .= $chars;
             }
         }
@@ -141,9 +203,12 @@ class RandomGenerator
                 if ($level_key === self::TOKEN_LEVEL_SPECIAL) {
                     $chars = preg_quote($chars);
                 }
-                $pattern_string .= '(?=.*[';
-                $pattern_string .= $chars;
-                $pattern_string .= '])';
+
+                if (($level_key & $this->level) == $level_key) {
+                    $pattern_string .= '(?=.*[';
+                    $pattern_string .= $chars;
+                    $pattern_string .= '])';
+                }
             }
             $pattern_string .= '([' . $string . ']+)';
             $pattern_string .= $range;
@@ -160,9 +225,9 @@ class RandomGenerator
         return $pattern_string;
     }
 
-    public function isMatch($string, $level, $min=8, $max=null, $strict=false) {
+    public function isMatch($string, $strict=false) {
         return preg_match(
-            $this->patternString($level, $min, $max, $strict),
+            $this->patternString($strict),
             $string
         );
     }
