@@ -103,7 +103,8 @@ class RandomGenerator
 
     /**
      * Random access token from key
-     * @return string Hexa String
+     * string is a Hexa String
+     * @return self
      */
     public function accessToken()
     {
@@ -113,7 +114,7 @@ class RandomGenerator
 
     /**
      * @param $length
-     * @return string
+     * @return self
      */
     private function randomHexaDecimalString()
     {
@@ -131,7 +132,7 @@ class RandomGenerator
     /**
      * @param int $level
      * @param int $length
-     * @return string
+     * @return self
      */
     public function password()
     {
@@ -139,6 +140,9 @@ class RandomGenerator
         return $this;
     }
 
+    /**
+     * @return self
+     */
     public function random()
     {
         $long_chars = '';
